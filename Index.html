@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Simulado ENEM - 95 questões</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f4f4f4;
+      color: #333;
+    }
+    .question-container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .images-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 15px;
+    }
+    .images-row img {
+      max-width: 48%;
+      border-radius: 8px;
+    }
+    img#question-img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+    .options {
+      margin-top: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    button.option {
+      padding: 10px;
+      font-size: 16px;
+      border: 2px solid #ccc;
+      background: white;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    button.option.selected {
+      border-color: orange;
+    }
+    .timer {
+      text-align: right;
+      font-size: 14px;
+      margin-top: 10px;
+      color: #666;
+    }
+    .results {
+      margin-top: 30px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .result-item {
+      border-bottom: 1px solid #ccc;
+      padding: 10px 0;
+    }
+    .result-item img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin-bottom: 5px;
+    }
+    .correct { color: green; font-weight: bold; }
+    .wrong { color: red; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<div class="question-container" id="quiz">
+  <div id="timer" class="timer"></div>
+  <div id="question-area">
+    <!-- Imagens serão inseridas aqui -->
+  </div>
+  <div class="options">
+    <button class="option" onclick="selectAnswer('A')">A</button>
+    <button class="option" onclick="selectAnswer('B')">B</button>
+    <button class="option" onclick="selectAnswer('C')">C</button>
+    <button class="option" onclick="selectAnswer('D')">D</button>
+    <button class="option" onclick="selectAnswer('E')">E</button>
+  </div>
+</div>
+
+<div class="results" id="results" style="display:none;"></div>
+
+<script>
+  const questions = [
+    "q1.jpeg",
+["q2a.jpeg", "q2b.jpeg"],
+"q3.jpeg",
+"q4.jpeg",
+"q5.jpeg",
+"q6.jpeg",
+"q7.jpeg",
+["q8a.jpeg", "q8b.jpeg"],
+"q9.jpeg",
+"q10.jpeg",
+"q11.jpeg",
+"q12.jpeg",
+"q13.jpeg",
+["q14a.jpeg", "q14b.jpeg"],
+"q15.jpeg",
+"q16.jpeg",
+"q17.jpeg",
+"q18.jpeg",
+"q19.jpeg",
+"q20.jpeg",
+"q21.jpeg",
+"q22.jpeg",
+"q23.jpeg",
+"q24.jpeg",
+["q25a.jpeg", "q25b.jpeg"],
+"q26.jpeg",
+"q27.jpeg",
+"q28.jpeg",
+"q29.jpeg",
+"q30.jpeg",
+"q31.jpeg",
+"q32.jpeg",
+"q33.jpeg",
+"q34.jpeg",
+"q35.jpeg",
+"q36.jpeg",
+"q37.jpeg",
+"q38.jpeg",
+["q39a.jpeg", "q39b.jpeg"],
+"q40.jpeg",
+"q41.jpeg",
+"q42.jpeg",
+"q43.jpeg",
+"q44.jpeg",
+"q45.jpeg",
+"q46.jpeg",
+"q47.jpeg",
+"q48.jpeg",
+"q49.jpeg",
+"q50.jpeg",
+"q51.jpeg",
+"q52.jpeg",
+"q53.jpeg",
+"q54.jpeg",
+"q55.jpeg",
+"q56.jpeg",
+"q57.jpeg",
+"q58.jpeg",
+"q59.jpeg",
+"q60.jpeg",
+"q61.jpeg",
+"q62.jpeg",
+"q63.jpeg",
+"q64.jpeg",
+"q65.jpeg",
+"q66.jpeg",
+"q67.jpeg",
+"q68.jpeg",
+"q69.jpeg",
+"q70.jpeg",
+"q71.jpeg",
+"q72.jpeg",
+"q73.jpeg",
+"q74.jpeg",
+"q75.jpeg",
+"q76.jpeg",
+"q77.jpeg",
+"q78.jpeg",
+"q79.jpeg",
+"q80.jpeg",
+"q81.jpeg",
+"q82.jpeg",
+"q83.jpeg",
+"q84.jpeg",
+"q85.jpeg",
+"q86.jpeg",
+"q87.jpeg",
+"q88.jpeg",
+"q89.jpeg",
+"q90.jpeg",
+"q91.jpeg",
+"q92.jpeg",
+"q93.jpeg",
+"q94.jpeg",
+"q95.jpeg"
+  ];
+
+  const correctAnswers = [
+    "E", "C", "B", "E", "C", "E", "D", "D", "C", "B",
+    "D", "E", "D", "D", "C", "E", "C", "B", "D", "C",
+    "B", "C", "E", "A", "D", "B", "B", "D", "B", "D",
+    "D", "C", "B", "E", "D", "A", "D", "E", "E", "B",
+    "C", "E", "C", "E", "B", "E", "B", "C", "D", "B",
+    "A", "D", "D", "E", "B", "B", "A", "B", "C", "D",
+    "C", "A", "E", "C", "E", "D", "A", "D", "B", "A",
+    "E", "A", "B", "E", "A", "D", "C", "E", "D", "A",
+    "D", "A", "C", "B", "C", "C", "D", "D", "D", "A",
+    "C", "A", "A", "A", "E"
+  ];
+
+  let userAnswers = [];
+  let currentQuestion = 0;
+  let timer;
+  let timeLeft = 180;
+
+  function loadQuestion() {
+    if (currentQuestion >= questions.length) {
+      showResults();
+      return;
+    }
+
+    const questionArea = document.getElementById("question-area");
+    questionArea.innerHTML = "";
+
+    const q = questions[currentQuestion];
+
+    if (Array.isArray(q)) {
+      // questão com duas imagens lado a lado
+      const div = document.createElement("div");
+      div.className = "images-row";
+      q.forEach(src => {
+        const img = document.createElement("img");
+        img.src = src;
+        img.alt = `Questão ${currentQuestion + 1}`;
+        div.appendChild(img);
+      });
+      questionArea.appendChild(div);
+    } else {
+      // questão com uma imagem só
+      const img = document.createElement("img");
+      img.id = "question-img";
+      img.src = q;
+      img.alt = `Questão ${currentQuestion + 1}`;
+      questionArea.appendChild(img);
+    }
+
+    document.querySelectorAll(".option").forEach(btn => {
+      btn.classList.remove("selected");
+    });
+
+    startTimer();
+  }
+
+  function startTimer() {
+    clearInterval(timer);
+    timeLeft = 180;
+    updateTimer();
+
+    timer = setInterval(() => {
+      timeLeft--;
+      updateTimer();
+      if (timeLeft <= 0) {
+        clearInterval(timer);
+        alert("Tempo esgotado! Questão marcada como errada.");
+        userAnswers.push(null);
+        currentQuestion++;
+        loadQuestion();
+      }
+    }, 1000);
+  }
+
+  function updateTimer() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    document.getElementById("timer").textContent = `Tempo: ${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+  }
+
+  function selectAnswer(letter) {
+    clearInterval(timer);
+    userAnswers.push(letter);
+    document.querySelectorAll(".option").forEach(btn => {
+      btn.classList.remove("selected");
+      if (btn.textContent === letter) btn.classList.add("selected");
+    });
+    setTimeout(() => {
+      currentQuestion++;
+      loadQuestion();
+    }, 400);
+  }
+
+  function showResults() {
+    document.getElementById("quiz").style.display = "none";
+    const resultsDiv = document.getElementById("results");
+    resultsDiv.style.display = "block";
+
+    let score = 0;
+    questions.forEach((imgOrArray, index) => {
+      const user = userAnswers[index];
+      const correct = correctAnswers[index];
+      if (user === correct) score++;
+
+      const div = document.createElement("div");
+      div.classList.add("result-item");
+
+      if (Array.isArray(imgOrArray)) {
+        // para questão com duas imagens
+        let imgsHTML = imgOrArray.map(src => `<img src="${src}" alt="Questão ${index + 1}">`).join("");
+        div.innerHTML = `
+          ${imgsHTML}
+          <p>Sua resposta: <span class="${user === correct ? 'correct' : 'wrong'}">${user || 'Não respondeu'}</span></p>
+          <p>Correta: <strong>${correct}</strong></p>
+        `;
+      } else {
+        div.innerHTML = `
+          <img src="${imgOrArray}" alt="Questão ${index + 1}">
+          <p>Sua resposta: <span class="${user === correct ? 'correct' : 'wrong'}">${user || 'Não respondeu'}</span></p>
+          <p>Correta: <strong>${correct}</strong></p>
+        `;
+      }
+
+      resultsDiv.appendChild(div);
+    });
+
+    const scoreDiv = document.createElement("div");
+    scoreDiv.style.fontWeight = "bold";
+    scoreDiv.style.fontSize = "18px";
+    scoreDiv.style.marginTop = "20px";
+    scoreDiv.textContent = `Você acertou ${score} de ${questions.length} questões.`;
+    resultsDiv.prepend(scoreDiv);
+  }
+
+  // Carrega a primeira questão ao abrir
+  loadQuestion();
+</script>
+
+</body>
+</html>
